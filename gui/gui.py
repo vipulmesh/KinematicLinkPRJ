@@ -15,6 +15,7 @@ from typing import Tuple
 from math import radians, pi
 
 from PySide6.QtWidgets import (
+    QScrollArea,
     QMainWindow,
     QWidget,
     QLabel,
@@ -32,11 +33,398 @@ from PySide6.QtWidgets import (
     QDoubleSpinBox,
     QRadioButton,
     QButtonGroup,
+    QMenuBar,
+    QDialog,
+    QFrame,
 )
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QUrl
+from PySide6.QtGui import (
+    QAction,
+    QPixmap,
+    QPainter,
+    QPainterPath,
+    QColor,
+    QDesktopServices,
+    QFont,
+)
 
 from gui.animation import AnimationCanvas
 from core.mechanism import FourBarMechanism
+
+
+class AboutDialog(QDialog):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("About 4-Bar Kinematic Chain Simulator")
+        self.setFixedSize(1200, 800)
+        
+        self.setStyleSheet('''
+            QDialog {
+                background-color: #1e1e2e;
+                color: #cdd6f4;
+            }
+            QLabel {
+                color: #cdd6f4;
+            }
+            QFrame#card {
+                background-color: #313244;
+                border-radius: 12px;
+            }
+            QLabel#cardTitle {
+                font-size: 14px;
+                font-weight: bold;
+                color: #cba6f7;
+                margin-bottom: 5px;
+            }
+            QPushButton#linkBtn {
+                background-color: #45475a;
+                color: #cdd6f4;
+                border-radius: 6px;
+                padding: 8px 16px;
+                font-size: 13px;
+                font-weight: bold;
+                border: 1px solid #585b70;
+            }
+            QPushButton#linkBtn:hover {
+                background-color: #585b70;
+                border: 1px solid #cba6f7;
+            }
+            QPushButton#closeBtn {
+                background-color: #f38ba8;
+                color: #11111b;
+                border-radius: 6px;
+                font-weight: bold;
+                font-size: 14px;
+            }
+            QPushButton#closeBtn:hover {
+                background-color: #eba0ac;
+            }
+            QLabel#badge {
+                background-color: #45475a;
+                color: #89b4fa;
+                border-radius: 6px;
+                padding: 6px 12px;
+                font-weight: bold;
+                font-size: 13px;
+            }
+        ''')
+        
+        main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(20, 20, 20, 20)
+        main_layout.setSpacing(10)
+
+        # ---------------------------------------------------------
+        # HEADER
+        # ---------------------------------------------------------
+        header_layout = QVBoxLayout()
+        header_layout.setSpacing(5)
+        title_lbl = QLabel("FOUR-BAR KINEMATIC CHAIN SIMULATOR")
+        title_lbl.setAlignment(Qt.AlignCenter)
+        title_font = QFont()
+        title_font.setPointSize(28)
+        title_font.setBold(True)
+        title_font.setLetterSpacing(QFont.AbsoluteSpacing, 2.0)
+        title_lbl.setFont(title_font)
+        
+        version_lbl = QLabel("Version 1.0")
+        version_lbl.setAlignment(Qt.AlignCenter)
+        version_font = QFont()
+        version_font.setPointSize(14)
+        version_lbl.setFont(version_font)
+        version_lbl.setStyleSheet("color: #a6adc8;")
+        
+        header_layout.addWidget(title_lbl)
+        header_layout.addWidget(version_lbl)
+        main_layout.addLayout(header_layout)
+        
+        line_top = QFrame()
+        line_top.setFrameShape(QFrame.HLine)
+        line_top.setStyleSheet("background-color: #45475a;")
+        main_layout.addWidget(line_top)
+
+        # ---------------------------------------------------------
+        # MAIN SCROLL AREA
+        # ---------------------------------------------------------
+        scroll_area = QScrollArea()
+        scroll_area.setWidgetResizable(True)
+        scroll_area.setStyleSheet("QScrollArea { border: none; background: transparent; } QWidget#scrollContent { background: transparent; }")
+        
+        scroll_content = QWidget()
+        scroll_content.setObjectName("scrollContent")
+        content_layout = QHBoxLayout(scroll_content)
+        content_layout.setContentsMargins(10, 10, 10, 10)
+        content_layout.setSpacing(20)
+
+        # =========================================================
+        # LEFT PANEL (30%)
+        # =========================================================
+        left_layout = QVBoxLayout()
+        left_layout.setSpacing(15)
+        
+        # Profile Card
+        profile_card = QFrame()
+        profile_card.setObjectName("card")
+        profile_layout = QVBoxLayout(profile_card)
+        profile_layout.setContentsMargins(15, 20, 15, 20)
+        profile_layout.setSpacing(10)
+        
+        photo_label = QLabel()
+        photo_size = 140
+        photo_label.setFixedSize(photo_size, photo_size)
+        
+        pixmap = QPixmap("assets/profile.png")
+        if pixmap.isNull():
+            pixmap = QPixmap(photo_size, photo_size)
+            pixmap.fill(QColor("#45475a"))
+            
+        target = QPixmap(photo_size, photo_size)
+        target.fill(Qt.transparent)
+        painter = QPainter(target)
+        painter.setRenderHint(QPainter.Antialiasing)
+        path = QPainterPath()
+        path.addEllipse(0, 0, photo_size, photo_size)
+        painter.setClipPath(path)
+        painter.drawPixmap(0, 0, photo_size, photo_size, pixmap.scaled(photo_size, photo_size, Qt.KeepAspectRatioByExpanding, Qt.SmoothTransformation))
+        painter.end()
+        
+        photo_label.setPixmap(target)
+        profile_layout.addWidget(photo_label, alignment=Qt.AlignHCenter)
+        
+        name_lbl = QLabel("Vipul Meshram")
+        name_lbl.setStyleSheet("font-size: 18px; font-weight: bold;")
+        name_lbl.setAlignment(Qt.AlignHCenter)
+        name_lbl.setWordWrap(True)
+        
+        role_lbl = QLabel("Mechanical Engineering Student")
+        role_lbl.setStyleSheet("font-size: 14px; color: #bac2de;")
+        role_lbl.setAlignment(Qt.AlignHCenter)
+        role_lbl.setWordWrap(True)
+        
+        college_lbl = QLabel("JSPM Rajarshi Shahu College of Engineering\nPune, Maharashtra")
+        college_lbl.setStyleSheet("font-size: 13px; color: #a6adc8; line-height: 1.4;")
+        college_lbl.setAlignment(Qt.AlignHCenter)
+        college_lbl.setWordWrap(True)
+        
+        profile_layout.addWidget(name_lbl)
+        profile_layout.addWidget(role_lbl)
+        profile_layout.addWidget(college_lbl)
+        
+        # Quick Info Card
+        info_card = QFrame()
+        info_card.setObjectName("card")
+        info_layout = QVBoxLayout(info_card)
+        info_layout.setContentsMargins(20, 15, 20, 15)
+        info_layout.setSpacing(10)
+        
+        def add_info_row(icon, text):
+            row = QHBoxLayout()
+            lbl_icon = QLabel(icon)
+            lbl_icon.setFixedWidth(25)
+            lbl_icon.setStyleSheet("font-size: 16px;")
+            lbl_text = QLabel(text)
+            lbl_text.setStyleSheet("font-size: 14px;")
+            lbl_text.setWordWrap(True)
+            row.addWidget(lbl_icon)
+            row.addWidget(lbl_text, 1)
+            info_layout.addLayout(row)
+            
+        add_info_row("👨‍💻", "Developer: Vipul Meshram")
+        add_info_row("🏫", "Dept: Mechanical Engineering")
+        add_info_row("📅", "Year: 2026–27")
+        add_info_row("🛠", "Version: 1.0")
+        
+        left_layout.addWidget(profile_card)
+        left_layout.addWidget(info_card)
+        left_layout.addStretch()
+
+        # =========================================================
+        # RIGHT PANEL (70%)
+        # =========================================================
+        right_layout = QVBoxLayout()
+        right_layout.setSpacing(15)
+        
+        # CARD 1: About the Software
+        about_card = QFrame()
+        about_card.setObjectName("card")
+        about_layout = QVBoxLayout(about_card)
+        about_layout.setContentsMargins(20, 20, 20, 20)
+        
+        about_title = QLabel("ABOUT THE SOFTWARE")
+        about_title.setObjectName("cardTitle")
+        about_desc = QLabel("This desktop application is a comprehensive tool designed for the robust simulation "
+                           "and kinematic analysis of planar four-bar mechanisms. Built for both educational "
+                           "and professional engineering contexts, it bridges the gap between theoretical machine "
+                           "design and visual, real-time validation.<br><br>"
+                           "The software evaluates position, velocity, and acceleration matrices at every degree of "
+                           "crank rotation. It preemptively validates physical assembly feasibility and Grashof's Law "
+                           "conditions before permitting simulation, ensuring that the mechanism behaves precisely "
+                           "as it would in the physical world.")
+        about_desc.setWordWrap(True)
+        about_desc.setStyleSheet("font-size: 14px; line-height: 1.6;")
+        
+        about_layout.addWidget(about_title)
+        about_layout.addSpacing(5)
+        about_layout.addWidget(about_desc)
+        
+        # CARD 2: Project Features
+        feat_card = QFrame()
+        feat_card.setObjectName("card")
+        feat_layout = QVBoxLayout(feat_card)
+        feat_layout.setContentsMargins(20, 20, 20, 20)
+        
+        feat_title = QLabel("PROJECT FEATURES")
+        feat_title.setObjectName("cardTitle")
+        feat_layout.addWidget(feat_title)
+        feat_layout.addSpacing(5)
+        
+        feat_grid = QGridLayout()
+        feat_grid.setSpacing(10)
+        features = [
+            "✔ Position Analysis", "✔ Assembly Validation",
+            "✔ Velocity Analysis", "✔ Motion Validation",
+            "✔ Acceleration Analysis", "✔ RPM Based Input",
+            "✔ Joint A Linear Acceleration", "✔ Real-Time Animation",
+            "✔ Joint B Linear Acceleration", "✔ Fixed Viewport",
+            "✔ Grashof Law Validation", "✔ Professional GUI"
+        ]
+        
+        for i, f in enumerate(features):
+            lbl = QLabel(f)
+            lbl.setStyleSheet("font-size: 14px;")
+            lbl.setWordWrap(True)
+            feat_grid.addWidget(lbl, i // 2, i % 2)
+            
+        feat_layout.addLayout(feat_grid)
+        
+        # Grid for Cards 3 & 4
+        bottom_cards = QHBoxLayout()
+        bottom_cards.setSpacing(15)
+        
+        # CARD 3: Technologies
+        tech_card = QFrame()
+        tech_card.setObjectName("card")
+        tech_layout = QVBoxLayout(tech_card)
+        tech_layout.setContentsMargins(20, 20, 20, 20)
+        
+        tech_title = QLabel("TECHNOLOGIES")
+        tech_title.setObjectName("cardTitle")
+        tech_layout.addWidget(tech_title)
+        tech_layout.addSpacing(10)
+        
+        badges_layout1 = QHBoxLayout()
+        badges_layout1.setSpacing(10)
+        for tech in ["Python", "PySide6", "NumPy"]:
+            b = QLabel(tech)
+            b.setObjectName("badge")
+            badges_layout1.addWidget(b)
+        badges_layout1.addStretch()
+        
+        badges_layout2 = QHBoxLayout()
+        badges_layout2.setSpacing(10)
+        for tech in ["SciPy", "Matplotlib", "Qt"]:
+            b = QLabel(tech)
+            b.setObjectName("badge")
+            badges_layout2.addWidget(b)
+        badges_layout2.addStretch()
+        
+        tech_layout.addLayout(badges_layout1)
+        tech_layout.addLayout(badges_layout2)
+        tech_layout.addStretch()
+        
+        # CARD 4: Project Information
+        info2_card = QFrame()
+        info2_card.setObjectName("card")
+        info2_layout = QVBoxLayout(info2_card)
+        info2_layout.setContentsMargins(20, 20, 20, 20)
+        
+        info2_title = QLabel("PROJECT INFORMATION")
+        info2_title.setObjectName("cardTitle")
+        info2_layout.addWidget(info2_title)
+        info2_layout.addSpacing(5)
+        
+        info2_grid = QGridLayout()
+        info2_grid.setSpacing(10)
+        
+        info_items = [
+            ("Faculty Guide", "<Leave Placeholder>"),
+            ("Project Name", "4-Bar Kinematic Simulator"),
+            ("Department", "Mechanical Engineering"),
+            ("Institute", "JSPM Rajarshi Shahu College of Engineering"),
+            ("Academic Year", "2026–27")
+        ]
+        
+        for i, (k, v) in enumerate(info_items):
+            lbl_k = QLabel(k)
+            lbl_k.setStyleSheet("font-weight: bold; font-size: 13px; color: #bac2de;")
+            lbl_k.setWordWrap(True)
+            lbl_v = QLabel(v)
+            lbl_v.setStyleSheet("font-size: 13px;")
+            lbl_v.setWordWrap(True)
+            info2_grid.addWidget(lbl_k, i, 0)
+            info2_grid.addWidget(lbl_v, i, 1)
+            
+        info2_layout.addLayout(info2_grid)
+        
+        bottom_cards.addWidget(info2_card, 6)
+        bottom_cards.addWidget(tech_card, 4)
+        
+        right_layout.addWidget(about_card)
+        right_layout.addWidget(feat_card)
+        right_layout.addLayout(bottom_cards)
+        right_layout.addStretch()
+        
+        # Combine Left & Right into Scroll Content
+        content_layout.addLayout(left_layout, 3)
+        content_layout.addLayout(right_layout, 7)
+        
+        scroll_area.setWidget(scroll_content)
+        main_layout.addWidget(scroll_area)
+        
+        # ---------------------------------------------------------
+        # BOTTOM BAR
+        # ---------------------------------------------------------
+        bottom_layout = QHBoxLayout()
+        bottom_layout.setContentsMargins(0, 10, 0, 0)
+        
+        footer_layout = QVBoxLayout()
+        footer_layout.setSpacing(2)
+        lbl1 = QLabel("© 2026 Vipul Meshram")
+        lbl1.setStyleSheet("color: #6c7086; font-size: 13px;")
+        lbl2 = QLabel("All Rights Reserved.")
+        lbl2.setStyleSheet("color: #6c7086; font-size: 13px;")
+        footer_layout.addWidget(lbl1)
+        footer_layout.addWidget(lbl2)
+        
+        # Link Buttons
+        links_layout = QHBoxLayout()
+        links_layout.setSpacing(15)
+        
+        def create_link_btn(text, url):
+            btn = QPushButton(text)
+            btn.setObjectName("linkBtn")
+            btn.setCursor(Qt.PointingHandCursor)
+            btn.clicked.connect(lambda _, u=url: QDesktopServices.openUrl(QUrl(u)))
+            return btn
+            
+        links_layout.addWidget(create_link_btn("GitHub", "https://github.com/"))
+        links_layout.addWidget(create_link_btn("LinkedIn", "https://linkedin.com/"))
+        links_layout.addWidget(create_link_btn("Portfolio", "https://example.com/"))
+        links_layout.addWidget(create_link_btn("Email", "mailto:example@example.com"))
+        
+        close_btn = QPushButton("Close")
+        close_btn.setObjectName("closeBtn")
+        close_btn.setFixedSize(120, 40)
+        close_btn.setCursor(Qt.PointingHandCursor)
+        close_btn.clicked.connect(self.close)
+        
+        bottom_layout.addLayout(footer_layout)
+        bottom_layout.addStretch()
+        bottom_layout.addLayout(links_layout)
+        bottom_layout.addStretch()
+        bottom_layout.addWidget(close_btn, alignment=Qt.AlignBottom)
+        
+        main_layout.addLayout(bottom_layout)
+
 
 
 class MainWindow(QMainWindow):
@@ -64,7 +452,18 @@ class MainWindow(QMainWindow):
     # -------------------------
     # UI Construction
     # -------------------------
+    def _setup_menu(self) -> None:
+        menu_bar = self.menuBar()
+        about_action = QAction("About", self)
+        about_action.triggered.connect(self._show_about)
+        menu_bar.addAction(about_action)
+
+    def _show_about(self) -> None:
+        dialog = AboutDialog(self)
+        dialog.exec()
+
     def setup_ui(self) -> None:
+        self._setup_menu()
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
 
@@ -226,7 +625,7 @@ class MainWindow(QMainWindow):
         main_layout.addWidget(center_panel, 1)
         main_layout.addWidget(right_panel)
 
-        self.statusBar().showMessage("Ready")
+        self.statusBar().showMessage("🟢 Ready")
 
         ####################################################
         # SIGNALS & INITIALIZATION
@@ -278,7 +677,7 @@ class MainWindow(QMainWindow):
         self._apply_mechanism_params(l1, l2, l3, l4, theta0, omega, alpha)
 
         self.animation_area.draw_mechanism()
-        self.statusBar().showMessage("Parameters validated and applied")
+        self.statusBar().showMessage("🟢 Ready")
 
     def _on_start(self) -> None:
         """Start simulation: validate inputs, then run pre-flight feasibility check."""
@@ -293,6 +692,7 @@ class MainWindow(QMainWindow):
             omega = (2 * pi * n_rpm) / 60.0
             alpha = float(self.alpha_input.value())
         except ValueError as exc:
+            self.statusBar().showMessage("🔴 Invalid Mechanism")
             QMessageBox.warning(self, "Invalid Input", str(exc))
             return
 
@@ -307,6 +707,7 @@ class MainWindow(QMainWindow):
         for i, (L, name) in enumerate(zip(links, link_names)):
             others = sum(links) - L
             if L >= others:
+                self.statusBar().showMessage("🔴 Invalid Mechanism")
                 QMessageBox.critical(
                     self,
                     "Assembly Error",
@@ -336,6 +737,7 @@ class MainWindow(QMainWindow):
                     QMessageBox.No,
                 )
                 if reply == QMessageBox.No:
+                    self.statusBar().showMessage("🔴 Invalid Mechanism")
                     return
         except Exception:
             pass
@@ -361,6 +763,7 @@ class MainWindow(QMainWindow):
         self.animation_area.solver.last_solution = saved_last
 
         if failed_angle is not None:
+            self.statusBar().showMessage("🔴 Invalid Mechanism")
             QMessageBox.critical(
                 self,
                 "Simulation Cannot Start",
@@ -380,11 +783,11 @@ class MainWindow(QMainWindow):
         self._apply_speed_slider()
         self.animation_area.draw_mechanism()
         self.animation_area.start()
-        self.statusBar().showMessage("Simulation started")
+        self.statusBar().showMessage("🟡 Running")
 
     def _on_pause(self) -> None:
         self.animation_area.pause()
-        self.statusBar().showMessage("Paused")
+        self.statusBar().showMessage("⏸ Paused")
 
     def _on_reset(self) -> None:
         # reset crank to initial angle, clear trace, reset timer
@@ -394,7 +797,7 @@ class MainWindow(QMainWindow):
         # set mechanism angle to initial
         self.mechanism.theta2 = float(self.theta_input.value())
         self.animation_area.draw_mechanism()
-        self.statusBar().showMessage("Reset")
+        self.statusBar().showMessage("🟢 Ready")
 
     def _on_speed_change(self, btn=None) -> None:
         self._apply_speed_slider()
