@@ -121,17 +121,22 @@ class MainWindow(QMainWindow):
         self.omega_input.setSuffix(" RPM")
         left_layout.addWidget(self.omega_input, 5, 1)
 
+        # Calculated Angular Velocity (Read-Only)
+        self.omega_calc_display = QLineEdit()
+        self.omega_calc_display.setReadOnly(True)
+        left_layout.addWidget(self.omega_calc_display, 6, 0, 1, 2)
+
         # Angular acceleration (rad/s^2)
-        left_layout.addWidget(QLabel("Angular Acceleration (\u03B1\u2082)"), 6, 0)
+        left_layout.addWidget(QLabel("Angular Acceleration (\u03B1\u2082)"), 7, 0)
         self.alpha_input = QDoubleSpinBox()
         self.alpha_input.setRange(-1e6, 1e6)
         self.alpha_input.setDecimals(6)
         self.alpha_input.setValue(0.0)
         self.alpha_input.setSuffix(" rad/s\u00B2")
-        left_layout.addWidget(self.alpha_input, 6, 1)
+        left_layout.addWidget(self.alpha_input, 7, 1)
 
         # Animation speed slider
-        left_layout.addWidget(QLabel("Animation Speed"), 7, 0)
+        left_layout.addWidget(QLabel("Animation Speed"), 8, 0)
         speed_layout = QHBoxLayout()
         self.speed_slider = QSlider(Qt.Horizontal)
         self.speed_slider.setRange(1, 5)
@@ -141,13 +146,13 @@ class MainWindow(QMainWindow):
         speed_layout.addWidget(self.speed_slider)
         self.speed_label = QLabel("1×")
         speed_layout.addWidget(self.speed_label)
-        left_layout.addLayout(speed_layout, 7, 1)
+        left_layout.addLayout(speed_layout, 8, 1)
 
         # Direction
-        left_layout.addWidget(QLabel("Direction"), 8, 0)
+        left_layout.addWidget(QLabel("Direction"), 9, 0)
         self.direction = QComboBox()
         self.direction.addItems(["Counter Clockwise", "Clockwise"])  # CCW positive
-        left_layout.addWidget(self.direction, 8, 1)
+        left_layout.addWidget(self.direction, 9, 1)
 
         # Buttons
         self.validate_btn = QPushButton("Validate")
@@ -155,10 +160,10 @@ class MainWindow(QMainWindow):
         self.pause_btn = QPushButton("Pause")
         self.reset_btn = QPushButton("Reset")
 
-        left_layout.addWidget(self.validate_btn, 9, 0)
-        left_layout.addWidget(self.start_btn, 9, 1)
-        left_layout.addWidget(self.pause_btn, 10, 0)
-        left_layout.addWidget(self.reset_btn, 10, 1)
+        left_layout.addWidget(self.validate_btn, 10, 0)
+        left_layout.addWidget(self.start_btn, 10, 1)
+        left_layout.addWidget(self.pause_btn, 11, 0)
+        left_layout.addWidget(self.reset_btn, 11, 1)
 
         left_panel.setLayout(left_layout)
 
@@ -222,14 +227,24 @@ class MainWindow(QMainWindow):
         self.validate_btn.clicked.connect(self._on_validate)
 
         self.speed_slider.valueChanged.connect(self._on_speed_change)
+        self.omega_input.valueChanged.connect(self._update_omega_calc_display)
 
         # initial display
+        self._update_omega_calc_display(self.omega_input.value())
         self._update_results_display_empty()
         self.animation_area.draw_mechanism()
 
     # -------------------------
     # UI callbacks
     # -------------------------
+    def _update_omega_calc_display(self, val: float) -> None:
+        """Update the read-only calculated angular velocity field."""
+        if val <= 0:
+            self.omega_calc_display.setText("Angular Velocity (\u03C9\u2082): -- rad/s")
+        else:
+            omega = (2 * pi * val) / 60.0
+            self.omega_calc_display.setText(f"Angular Velocity (\u03C9\u2082): {omega:.4f} rad/s")
+
     def _on_validate(self) -> None:
         """Validate inputs and update mechanism without starting simulation."""
 
