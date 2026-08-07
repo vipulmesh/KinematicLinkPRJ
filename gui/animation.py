@@ -51,11 +51,14 @@ class AnimationCanvas(FigureCanvas):
         super().__init__(self.figure)
 
         self.ax = self.figure.add_subplot(111)
-        self.ax.set_aspect("equal")
+        self.ax.set_aspect("equal", adjustable="box")
         self.ax.grid(True)
         self.ax.set_title("4-Bar Mechanism")
         self.ax.set_xlabel("X")
         self.ax.set_ylabel("Y")
+        
+        self._last_link_lengths = None
+        self._xmin = self._xmax = self._ymin = self._ymax = 0.0
 
         # Animation timer
         self._timer = QTimer(self)
@@ -167,34 +170,31 @@ class AnimationCanvas(FigureCanvas):
     # -------------------------
     # Drawing helpers
     # -------------------------
-    def _autoscale(self, points) -> None:
-        """Autoscale axes to fit given points (iterable of (x,y))."""
-
-        xs = [p[0] for p in points]
-        ys = [p[1] for p in points]
-        xmin, xmax = min(xs), max(xs)
-        ymin, ymax = min(ys), max(ys)
-
-        # padding fraction
-        dx = xmax - xmin
-        dy = ymax - ymin
-        if dx == 0:
-            dx = 1.0
-        if dy == 0:
-            dy = 1.0
-
-        pad_x = dx * self._padding
-        pad_y = dy * self._padding
-
-        self.ax.set_xlim(xmin - pad_x, xmax + pad_x)
-        self.ax.set_ylim(ymin - pad_y, ymax + pad_y)
+    def _update_viewport_limits(self) -> None:
+        """Compute fixed viewport limits based on mechanism link lengths."""
+        m = self.mechanism
+        current_lengths = (m.l1, m.l2, m.l3, m.l4)
+        
+        if self._last_link_lengths != current_lengths:
+            self._last_link_lengths = current_lengths
+            max_reach = m.l2 + m.l3 + m.l4
+            margin = max(m.l1, m.l2, m.l3, m.l4) * 0.2
+            
+            self._xmin = -margin
+            self._xmax = m.l1 + max_reach + margin
+            self._ymin = -(max_reach + margin)
+            self._ymax = max_reach + margin
+            
+        self.ax.set_xlim(self._xmin, self._xmax)
+        self.ax.set_ylim(self._ymin, self._ymax)
 
     def draw_mechanism(self) -> None:
         """Compute kinematics via solver and draw the mechanism frame."""
 
         self.ax.clear()
-        self.ax.set_aspect("equal")
+        self.ax.set_aspect("equal", adjustable="box")
         self.ax.grid(True)
+        self._update_viewport_limits()
 
         # Position, velocity, acceleration via solver
         try:
@@ -229,9 +229,7 @@ class AnimationCanvas(FigureCanvas):
 
             self.ax.plot(self.coupler_trace[:, 0], self.coupler_trace[:, 1], color="magenta", linewidth=1, alpha=0.8)
 
-        # Auto-scale to shown geometry
-        all_points = [O2, A, B, O4]
-        self._autoscale(all_points)
+
 
         # Render
         self.draw()

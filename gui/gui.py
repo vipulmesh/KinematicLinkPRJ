@@ -30,6 +30,8 @@ from PySide6.QtWidgets import (
     QSlider,
     QSpinBox,
     QDoubleSpinBox,
+    QRadioButton,
+    QButtonGroup,
 )
 from PySide6.QtCore import Qt
 
@@ -135,18 +137,28 @@ class MainWindow(QMainWindow):
         self.alpha_input.setSuffix(" rad/s\u00B2")
         left_layout.addWidget(self.alpha_input, 7, 1)
 
-        # Animation speed slider
-        left_layout.addWidget(QLabel("Animation Speed"), 8, 0)
-        speed_layout = QHBoxLayout()
-        self.speed_slider = QSlider(Qt.Horizontal)
-        self.speed_slider.setRange(1, 5)
-        self.speed_slider.setValue(3)  # default to 1x at position 3
-        self.speed_slider.setTickPosition(QSlider.TicksBelow)
-        self.speed_slider.setTickInterval(1)
-        speed_layout.addWidget(self.speed_slider)
-        self.speed_label = QLabel("1×")
-        speed_layout.addWidget(self.speed_label)
-        left_layout.addLayout(speed_layout, 8, 1)
+        # Animation speed (Radio Buttons)
+        speed_group = QGroupBox("Animation Speed")
+        speed_vlayout = QVBoxLayout()
+        self.speed_btn_group = QButtonGroup(self)
+        
+        self.speed_options = {
+            "0.25×": 0.25,
+            "0.5×": 0.5,
+            "1×": 1.0,
+            "2×": 2.0,
+            "5×": 5.0
+        }
+        
+        for i, text in enumerate(self.speed_options.keys()):
+            rb = QRadioButton(text)
+            if text == "1×":
+                rb.setChecked(True)
+            speed_vlayout.addWidget(rb)
+            self.speed_btn_group.addButton(rb, i)
+            
+        speed_group.setLayout(speed_vlayout)
+        left_layout.addWidget(speed_group, 8, 0, 1, 2)
 
         # Direction
         left_layout.addWidget(QLabel("Direction"), 9, 0)
@@ -226,7 +238,7 @@ class MainWindow(QMainWindow):
         self.reset_btn.clicked.connect(self._on_reset)
         self.validate_btn.clicked.connect(self._on_validate)
 
-        self.speed_slider.valueChanged.connect(self._on_speed_change)
+        self.speed_btn_group.buttonClicked.connect(self._on_speed_change)
         self.omega_input.valueChanged.connect(self._update_omega_calc_display)
 
         # initial display
@@ -318,11 +330,7 @@ class MainWindow(QMainWindow):
         self.animation_area.draw_mechanism()
         self.statusBar().showMessage("Reset")
 
-    def _on_speed_change(self, value: int) -> None:
-        # update label and apply mapping
-        mapping = {1: 0.25, 2: 0.5, 3: 1.0, 4: 2.0, 5: 5.0}
-        factor = mapping.get(int(value), 1.0)
-        self.speed_label.setText(f"{factor}×")
+    def _on_speed_change(self, btn=None) -> None:
         self._apply_speed_slider()
 
     # -------------------------
@@ -355,17 +363,15 @@ class MainWindow(QMainWindow):
         self.mechanism.set_input_motion(omega=float(omega_rad_s), alpha=float(alpha_rad_s2), direction=direction)
 
     def _apply_speed_slider(self) -> None:
-        """Set QTimer interval according to slider (do not change ω₂)."""
+        """Set animation speed scale according to selected radio button (do not change ω₂)."""
 
-        mapping = {1: 0.25, 2: 0.5, 3: 1.0, 4: 2.0, 5: 5.0}
-        val = int(self.speed_slider.value())
-        factor = mapping.get(val, 1.0)
+        selected_btn = self.speed_btn_group.checkedButton()
+        text = selected_btn.text() if selected_btn else "1×"
+        factor = self.speed_options.get(text, 1.0)
 
-        # base interval for 1x
-        base = self._base_timer_interval_ms
-        # To achieve factor f, shorten interval by f (faster) or lengthen for <1
-        interval_ms = int(max(1, base / factor))
-        self.animation_area.set_timer_interval(interval_ms)
+        # Scale dt instead of timer interval to avoid OS timer resolution limits
+        # maintaining a smooth 30ms fixed interval while advancing simulation faster/slower
+        self.animation_area.set_speed_scale(factor)
 
     # -------------------------
     # Kinematics update receiver
@@ -382,7 +388,8 @@ class MainWindow(QMainWindow):
         except Exception:
             mtype = "Unknown"
 
-        speed_text = self.speed_label.text()
+        selected_btn = self.speed_btn_group.checkedButton()
+        speed_text = selected_btn.text() if selected_btn else "1×"
 
         n_rpm_current = (abs(data['omega2']) * 60) / (2 * pi)
 
