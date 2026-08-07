@@ -249,6 +249,16 @@ class AnimationCanvas(FigureCanvas):
             alpha3 = float(getattr(self.mechanism, "alpha3", 0.0))
             alpha4 = float(getattr(self.mechanism, "alpha4", 0.0))
 
+        try:
+            a_Ax, a_Ay, a_Anet = self.solver.calculate_joint_A_acceleration()
+        except Exception:
+            a_Ax, a_Ay, a_Anet = 0.0, 0.0, 0.0
+
+        try:
+            a_Bx, a_By, a_Bnet = self.solver.calculate_joint_B_acceleration()
+        except Exception:
+            a_Bx, a_By, a_Bnet = 0.0, 0.0, 0.0
+
         # Emit numeric state for GUI consumption
         kinematics: Dict[str, object] = {
             "theta2": float(self.mechanism.theta2),
@@ -260,6 +270,12 @@ class AnimationCanvas(FigureCanvas):
             "alpha2": float(getattr(self.mechanism, "alpha2", 0.0)),
             "alpha3": float(alpha3),
             "alpha4": float(alpha4),
+            "a_Ax": float(a_Ax),
+            "a_Ay": float(a_Ay),
+            "a_Anet": float(a_Anet),
+            "a_Bx": float(a_Bx),
+            "a_By": float(a_By),
+            "a_Bnet": float(a_Bnet),
             "points": {"O2": O2, "A": A, "B": B, "O4": O4},
         }
 

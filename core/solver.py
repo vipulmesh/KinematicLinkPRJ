@@ -345,6 +345,72 @@ class FourBarSolver:
 
         return float(alpha3), float(alpha4)
 
+    def calculate_joint_A_acceleration(self, state: Optional[KinematicState] = None) -> Tuple[float, float, float]:
+        """Calculate the Cartesian linear acceleration of Joint A."""
+
+        if state is None:
+            theta2_deg = self.mechanism.theta2
+            omega2 = self.mechanism.omega2
+            alpha2 = self.mechanism.alpha2
+        else:
+            theta2_deg = state.theta2
+            omega2 = state.omega2
+            alpha2 = state.alpha2
+
+        theta2_rad = radians(theta2_deg)
+        l2 = self.mechanism.l2
+
+        ax_a = -l2 * alpha2 * np.sin(theta2_rad) - l2 * (omega2**2) * np.cos(theta2_rad)
+        ay_a = l2 * alpha2 * np.cos(theta2_rad) - l2 * (omega2**2) * np.sin(theta2_rad)
+        net_a = np.sqrt(ax_a**2 + ay_a**2)
+
+        return float(ax_a), float(ay_a), float(net_a)
+
+    def calculate_joint_B_acceleration(self, state: Optional[KinematicState] = None) -> Tuple[float, float, float]:
+        """Calculate the Cartesian linear acceleration of Joint B.
+
+        Returns
+        -------
+        Ax, Ay, Net : tuple of floats
+            Acceleration components and magnitude in mechanism length units per s^2.
+        """
+
+        if state is None:
+            theta2_deg = self.mechanism.theta2
+            omega2 = self.mechanism.omega2
+            alpha2 = self.mechanism.alpha2
+        else:
+            theta2_deg = state.theta2
+            omega2 = state.omega2
+            alpha2 = state.alpha2
+
+        theta3_deg, _ = self.solve_position()
+        
+        try:
+            omega3 = float(getattr(self.mechanism, "omega3"))
+        except Exception:
+            omega3, _ = self.solve_velocity(state)
+            
+        try:
+            alpha3 = float(getattr(self.mechanism, "alpha3"))
+        except Exception:
+            alpha3, _ = self.solve_acceleration(state)
+
+        theta2_rad = radians(theta2_deg)
+        theta3_rad = radians(theta3_deg)
+
+        l2 = self.mechanism.l2
+        l3 = self.mechanism.l3
+
+        ax = -l2 * alpha2 * np.sin(theta2_rad) - l2 * (omega2**2) * np.cos(theta2_rad) \
+             - l3 * alpha3 * np.sin(theta3_rad) - l3 * (omega3**2) * np.cos(theta3_rad)
+
+        ay = l2 * alpha2 * np.cos(theta2_rad) - l2 * (omega2**2) * np.sin(theta2_rad) \
+             + l3 * alpha3 * np.cos(theta3_rad) - l3 * (omega3**2) * np.sin(theta3_rad)
+
+        net = np.sqrt(ax**2 + ay**2)
+        return float(ax), float(ay), float(net)
+
 
 # Backwards compatible name
 class PositionSolver(FourBarSolver):
