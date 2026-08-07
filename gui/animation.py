@@ -171,19 +171,53 @@ class AnimationCanvas(FigureCanvas):
     # Drawing helpers
     # -------------------------
     def _update_viewport_limits(self) -> None:
-        """Compute fixed viewport limits based on mechanism link lengths."""
+        """Compute fixed viewport limits based on a full 360-degree virtual revolution."""
         m = self.mechanism
         current_lengths = (m.l1, m.l2, m.l3, m.l4)
         
         if self._last_link_lengths != current_lengths:
             self._last_link_lengths = current_lengths
-            max_reach = m.l2 + m.l3 + m.l4
-            margin = max(m.l1, m.l2, m.l3, m.l4) * 0.2
             
-            self._xmin = -margin
-            self._xmax = m.l1 + max_reach + margin
-            self._ymin = -(max_reach + margin)
-            self._ymax = max_reach + margin
+            # Save current state
+            saved_theta = m.theta2
+            
+            all_xs = []
+            all_ys = []
+            
+            # Sweep through a full revolution to find true workspace bounds
+            for angle in range(0, 360, 2):
+                m.theta2 = float(angle)
+                try:
+                    points = self.solver.calculate_points()
+                    for pt_name in ["O2", "A", "B", "O4"]:
+                        all_xs.append(points[pt_name][0])
+                        all_ys.append(points[pt_name][1])
+                except Exception:
+                    pass  # Ignore invalid non-Grashof configurations
+                    
+            # Restore state
+            m.theta2 = saved_theta
+            
+            if not all_xs:
+                all_xs, all_ys = [0.0, m.l1], [0.0, 0.0]
+                
+            min_x, max_x = min(all_xs), max(all_xs)
+            min_y, max_y = min(all_ys), max(all_ys)
+            
+            dx = max_x - min_x
+            dy = max_y - min_y
+            
+            if dx == 0: dx = 1.0
+            if dy == 0: dy = 1.0
+            
+            # 10% safety margin
+            margin_x = dx * 0.10
+            margin_y = dy * 0.10
+            
+            self._xmin = min_x - margin_x
+            self._xmax = max_x + margin_x
+            self._ymin = min_y - margin_y
+            self._ymax = max_y + margin_y
             
         self.ax.set_xlim(self._xmin, self._xmax)
         self.ax.set_ylim(self._ymin, self._ymax)

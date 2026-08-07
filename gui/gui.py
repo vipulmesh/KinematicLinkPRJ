@@ -281,37 +281,103 @@ class MainWindow(QMainWindow):
         self.statusBar().showMessage("Parameters validated and applied")
 
     def _on_start(self) -> None:
-        """Start simulation: validate inputs, reset animation, and start timer."""
+        """Start simulation: validate inputs, then run pre-flight feasibility check."""
 
+        # ── Stage 1: Numeric input validation ────────────────────────────────
         try:
             l1, l2, l3, l4 = self._read_lengths()
             theta0 = float(self.theta_input.value())
             n_rpm = float(self.omega_input.value())
             if n_rpm <= 0:
                 raise ValueError("Input Speed (N) must be a positive number.")
-            # Convert N (RPM) to ω₂ (rad/s) using ω = (2 × π × N) / 60
-            # This conversion follows standard machine design conventions.
             omega = (2 * pi * n_rpm) / 60.0
             alpha = float(self.alpha_input.value())
         except ValueError as exc:
             QMessageBox.warning(self, "Invalid Input", str(exc))
             return
 
-        # direction
         direction_text = self.direction.currentText()
         direction = 1 if direction_text.lower().startswith("counter") else -1
 
-        # Apply parameters to mechanism
+        # ── Stage 2: Assembly feasibility ─────────────────────────────────────
+        # The four links must be able to form a closed loop at some position.
+        # Necessary condition: no single link can be longer than the sum of the others.
+        links = [l1, l2, l3, l4]
+        link_names = ["Ground (L1)", "Crank (L2)", "Coupler (L3)", "Follower (L4)"]
+        for i, (L, name) in enumerate(zip(links, link_names)):
+            others = sum(links) - L
+            if L >= others:
+                QMessageBox.critical(
+                    self,
+                    "Assembly Error",
+                    f"Simulation cannot start.\n\n"
+                    f"Reason:\n"
+                    f"{name} ({L:.2f} mm) is too long to form a closed four-bar linkage.\n"
+                    f"It must be shorter than the sum of the remaining three links ({others:.2f} mm).\n\n"
+                    f"Please modify the link lengths."
+                )
+                return
+
+        # Apply parameters before running the sweep
         self._apply_mechanism_params(l1, l2, l3, l4, theta0, omega, alpha, direction)
 
-        # Reset sim time and coupler trace
+        # ── Stage 3: Grashof check (advisory — non-Grashof mechanisms can ────
+        # still be valid rockers, so we warn but do not block)
+        try:
+            is_grashof, mtype = self.animation_area.solver.grashof()
+            if not is_grashof:
+                reply = QMessageBox.question(
+                    self,
+                    "Non-Grashof Mechanism",
+                    f"The entered link lengths produce a Non-Grashof mechanism.\n"
+                    f"The crank cannot make a full revolution — it will oscillate as a rocker.\n\n"
+                    f"Do you still want to proceed?",
+                    QMessageBox.Yes | QMessageBox.No,
+                    QMessageBox.No,
+                )
+                if reply == QMessageBox.No:
+                    return
+        except Exception:
+            pass
+
+        # ── Stage 4: Motion feasibility sweep (0° → 360°, every 1°) ──────────
+        # Re-use the existing solver — no kinematic logic is duplicated here.
+        saved_theta = self.mechanism.theta2
+        saved_last = self.animation_area.solver.last_solution
+        # Reset solver continuity state for a clean sweep
+        self.animation_area.solver.last_solution = None
+        failed_angle = None
+
+        for angle in range(0, 360, 1):
+            self.mechanism.theta2 = float(angle)
+            try:
+                self.animation_area.solver.calculate_points()
+            except Exception:
+                failed_angle = angle
+                break
+
+        # Restore mechanism and solver state
+        self.mechanism.theta2 = saved_theta
+        self.animation_area.solver.last_solution = saved_last
+
+        if failed_angle is not None:
+            QMessageBox.critical(
+                self,
+                "Simulation Cannot Start",
+                f"Simulation cannot start.\n\n"
+                f"Reason:\n"
+                f"The mechanism becomes unsolvable near \u03b8\u2082 = {failed_angle}\u00b0.\n\n"
+                f"The solver could not find a valid configuration at this crank position.\n"
+                f"This usually means the links cannot close into a valid four-bar loop\n"
+                f"at that angle.\n\n"
+                f"Please modify the link lengths."
+            )
+            return
+
+        # ── All stages passed — launch animation ──────────────────────────────
         self.simulation_time = 0.0
         self.animation_area.coupler_trace = None
-
-        # Ensure timer interval reflects slider position
         self._apply_speed_slider()
-
-        # Redraw and start
         self.animation_area.draw_mechanism()
         self.animation_area.start()
         self.statusBar().showMessage("Simulation started")
