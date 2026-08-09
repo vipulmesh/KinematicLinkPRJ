@@ -156,92 +156,10 @@ class AboutDialog(QDialog):
         content_layout.setSpacing(20)
 
         # =========================================================
-        # LEFT PANEL (30%)
+        # LEFT COLUMN (50%)
         # =========================================================
         left_layout = QVBoxLayout()
         left_layout.setSpacing(15)
-        
-        # Profile Card
-        profile_card = QFrame()
-        profile_card.setObjectName("card")
-        profile_layout = QVBoxLayout(profile_card)
-        profile_layout.setContentsMargins(15, 20, 15, 20)
-        profile_layout.setSpacing(10)
-        
-        photo_label = QLabel()
-        photo_size = 140
-        photo_label.setFixedSize(photo_size, photo_size)
-        
-        pixmap = QPixmap("assets/profile.png")
-        if pixmap.isNull():
-            pixmap = QPixmap(photo_size, photo_size)
-            pixmap.fill(QColor("#45475a"))
-            
-        target = QPixmap(photo_size, photo_size)
-        target.fill(Qt.transparent)
-        painter = QPainter(target)
-        painter.setRenderHint(QPainter.Antialiasing)
-        path = QPainterPath()
-        path.addEllipse(0, 0, photo_size, photo_size)
-        painter.setClipPath(path)
-        painter.drawPixmap(0, 0, photo_size, photo_size, pixmap.scaled(photo_size, photo_size, Qt.KeepAspectRatioByExpanding, Qt.SmoothTransformation))
-        painter.end()
-        
-        photo_label.setPixmap(target)
-        profile_layout.addWidget(photo_label, alignment=Qt.AlignHCenter)
-        
-        name_lbl = QLabel("Vipul Meshram")
-        name_lbl.setStyleSheet("font-size: 18px; font-weight: bold;")
-        name_lbl.setAlignment(Qt.AlignHCenter)
-        name_lbl.setWordWrap(True)
-        
-        role_lbl = QLabel("Mechanical Engineering Student")
-        role_lbl.setStyleSheet("font-size: 14px; color: #bac2de;")
-        role_lbl.setAlignment(Qt.AlignHCenter)
-        role_lbl.setWordWrap(True)
-        
-        college_lbl = QLabel("JSPM Rajarshi Shahu College of Engineering\nPune, Maharashtra")
-        college_lbl.setStyleSheet("font-size: 13px; color: #a6adc8; line-height: 1.4;")
-        college_lbl.setAlignment(Qt.AlignHCenter)
-        college_lbl.setWordWrap(True)
-        
-        profile_layout.addWidget(name_lbl)
-        profile_layout.addWidget(role_lbl)
-        profile_layout.addWidget(college_lbl)
-        
-        # Quick Info Card
-        info_card = QFrame()
-        info_card.setObjectName("card")
-        info_layout = QVBoxLayout(info_card)
-        info_layout.setContentsMargins(20, 15, 20, 15)
-        info_layout.setSpacing(10)
-        
-        def add_info_row(icon, text):
-            row = QHBoxLayout()
-            lbl_icon = QLabel(icon)
-            lbl_icon.setFixedWidth(25)
-            lbl_icon.setStyleSheet("font-size: 16px;")
-            lbl_text = QLabel(text)
-            lbl_text.setStyleSheet("font-size: 14px;")
-            lbl_text.setWordWrap(True)
-            row.addWidget(lbl_icon)
-            row.addWidget(lbl_text, 1)
-            info_layout.addLayout(row)
-            
-        add_info_row("👨‍💻", "Developer: Vipul Meshram")
-        add_info_row("🏫", "Dept: Mechanical Engineering")
-        add_info_row("📅", "Year: 2026–27")
-        add_info_row("🛠", "Version: 1.0")
-        
-        left_layout.addWidget(profile_card)
-        left_layout.addWidget(info_card)
-        left_layout.addStretch()
-
-        # =========================================================
-        # RIGHT PANEL (70%)
-        # =========================================================
-        right_layout = QVBoxLayout()
-        right_layout.setSpacing(15)
         
         # CARD 1: About the Software
         about_card = QFrame()
@@ -266,13 +184,58 @@ class AboutDialog(QDialog):
         about_layout.addSpacing(5)
         about_layout.addWidget(about_desc)
         
-        # CARD 2: Project Features
+        left_layout.addWidget(about_card)
+
+        # CARD 2: Project Information
+        info2_card = QFrame()
+        info2_card.setObjectName("card")
+        info2_layout = QVBoxLayout(info2_card)
+        info2_layout.setContentsMargins(20, 20, 20, 20)
+        
+        info2_title = QLabel("PROJECT INFORMATION")
+        info2_title.setObjectName("cardTitle")
+        info2_layout.addWidget(info2_title)
+        info2_layout.addSpacing(5)
+        
+        info2_grid = QGridLayout()
+        info2_grid.setSpacing(15)
+        
+        info_items = [
+            ("Project Name", "Four-Bar Kinematic Chain Simulator"),
+            ("Faculty Guide", "<Faculty Name>"),
+            ("Department", "Mechanical Engineering"),
+            ("Institute", "JSPM Rajarshi Shahu College of Engineering, Pune"),
+            ("Academic Year", "2026–27")
+        ]
+        
+        for i, (k, v) in enumerate(info_items):
+            lbl_k = QLabel(k)
+            lbl_k.setStyleSheet("font-weight: bold; font-size: 14px; color: #bac2de;")
+            lbl_k.setWordWrap(True)
+            lbl_v = QLabel(v)
+            lbl_v.setStyleSheet("font-size: 14px;")
+            lbl_v.setWordWrap(True)
+            info2_grid.addWidget(lbl_k, i, 0)
+            info2_grid.addWidget(lbl_v, i, 1)
+            
+        info2_layout.addLayout(info2_grid)
+        
+        left_layout.addWidget(info2_card)
+        left_layout.addStretch()
+
+        # =========================================================
+        # RIGHT COLUMN (50%)
+        # =========================================================
+        right_layout = QVBoxLayout()
+        right_layout.setSpacing(15)
+        
+        # CARD 3: Key Features
         feat_card = QFrame()
         feat_card.setObjectName("card")
         feat_layout = QVBoxLayout(feat_card)
         feat_layout.setContentsMargins(20, 20, 20, 20)
         
-        feat_title = QLabel("PROJECT FEATURES")
+        feat_title = QLabel("KEY FEATURES")
         feat_title.setObjectName("cardTitle")
         feat_layout.addWidget(feat_title)
         feat_layout.addSpacing(5)
@@ -280,12 +243,12 @@ class AboutDialog(QDialog):
         feat_grid = QGridLayout()
         feat_grid.setSpacing(10)
         features = [
-            "✔ Position Analysis", "✔ Assembly Validation",
-            "✔ Velocity Analysis", "✔ Motion Validation",
-            "✔ Acceleration Analysis", "✔ RPM Based Input",
-            "✔ Joint A Linear Acceleration", "✔ Real-Time Animation",
-            "✔ Joint B Linear Acceleration", "✔ Fixed Viewport",
-            "✔ Grashof Law Validation", "✔ Professional GUI"
+            "• Position Analysis", "• Assembly Validation",
+            "• Velocity Analysis", "• Motion Validation",
+            "• Acceleration Analysis", "• RPM-Based Input",
+            "• Joint A Acceleration", "• Real-Time Animation",
+            "• Joint B Acceleration", "• Fixed Viewport",
+            "• Grashof Law Validation"
         ]
         
         for i, f in enumerate(features):
@@ -295,18 +258,16 @@ class AboutDialog(QDialog):
             feat_grid.addWidget(lbl, i // 2, i % 2)
             
         feat_layout.addLayout(feat_grid)
+
+        right_layout.addWidget(feat_card)
         
-        # Grid for Cards 3 & 4
-        bottom_cards = QHBoxLayout()
-        bottom_cards.setSpacing(15)
-        
-        # CARD 3: Technologies
+        # CARD 4: Technologies
         tech_card = QFrame()
         tech_card.setObjectName("card")
         tech_layout = QVBoxLayout(tech_card)
         tech_layout.setContentsMargins(20, 20, 20, 20)
         
-        tech_title = QLabel("TECHNOLOGIES")
+        tech_title = QLabel("TECHNOLOGIES USED")
         tech_title.setObjectName("cardTitle")
         tech_layout.addWidget(tech_title)
         tech_layout.addSpacing(10)
@@ -321,7 +282,7 @@ class AboutDialog(QDialog):
         
         badges_layout2 = QHBoxLayout()
         badges_layout2.setSpacing(10)
-        for tech in ["SciPy", "Matplotlib", "Qt"]:
+        for tech in ["SciPy", "Matplotlib"]:
             b = QLabel(tech)
             b.setObjectName("badge")
             badges_layout2.addWidget(b)
@@ -329,53 +290,13 @@ class AboutDialog(QDialog):
         
         tech_layout.addLayout(badges_layout1)
         tech_layout.addLayout(badges_layout2)
-        tech_layout.addStretch()
-        
-        # CARD 4: Project Information
-        info2_card = QFrame()
-        info2_card.setObjectName("card")
-        info2_layout = QVBoxLayout(info2_card)
-        info2_layout.setContentsMargins(20, 20, 20, 20)
-        
-        info2_title = QLabel("PROJECT INFORMATION")
-        info2_title.setObjectName("cardTitle")
-        info2_layout.addWidget(info2_title)
-        info2_layout.addSpacing(5)
-        
-        info2_grid = QGridLayout()
-        info2_grid.setSpacing(10)
-        
-        info_items = [
-            ("Faculty Guide", "<Leave Placeholder>"),
-            ("Project Name", "4-Bar Kinematic Simulator"),
-            ("Department", "Mechanical Engineering"),
-            ("Institute", "JSPM Rajarshi Shahu College of Engineering"),
-            ("Academic Year", "2026–27")
-        ]
-        
-        for i, (k, v) in enumerate(info_items):
-            lbl_k = QLabel(k)
-            lbl_k.setStyleSheet("font-weight: bold; font-size: 13px; color: #bac2de;")
-            lbl_k.setWordWrap(True)
-            lbl_v = QLabel(v)
-            lbl_v.setStyleSheet("font-size: 13px;")
-            lbl_v.setWordWrap(True)
-            info2_grid.addWidget(lbl_k, i, 0)
-            info2_grid.addWidget(lbl_v, i, 1)
-            
-        info2_layout.addLayout(info2_grid)
-        
-        bottom_cards.addWidget(info2_card, 6)
-        bottom_cards.addWidget(tech_card, 4)
-        
-        right_layout.addWidget(about_card)
-        right_layout.addWidget(feat_card)
-        right_layout.addLayout(bottom_cards)
+
+        right_layout.addWidget(tech_card)
         right_layout.addStretch()
         
         # Combine Left & Right into Scroll Content
-        content_layout.addLayout(left_layout, 3)
-        content_layout.addLayout(right_layout, 7)
+        content_layout.addLayout(left_layout, 1)
+        content_layout.addLayout(right_layout, 1)
         
         scroll_area.setWidget(scroll_content)
         main_layout.addWidget(scroll_area)
@@ -390,7 +311,7 @@ class AboutDialog(QDialog):
         footer_layout.setSpacing(2)
         lbl1 = QLabel("© 2026 Vipul Meshram")
         lbl1.setStyleSheet("color: #6c7086; font-size: 13px;")
-        lbl2 = QLabel("All Rights Reserved.")
+        lbl2 = QLabel("Developed by Vipul Meshram")
         lbl2.setStyleSheet("color: #6c7086; font-size: 13px;")
         footer_layout.addWidget(lbl1)
         footer_layout.addWidget(lbl2)
