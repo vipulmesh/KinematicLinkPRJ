@@ -202,10 +202,11 @@ class AboutDialog(QDialog):
         
         info_items = [
             ("Project Name", "Four-Bar Kinematic Chain Simulator"),
-            ("Faculty Guide", "<Faculty Name>"),
+            ("Software By", "Vipul Meshram (BATCH - 2028 MECHANICAL-A)"),
+            ("Faculty Guide", "Dr. S.S. Pimpale"),
             ("Department", "Mechanical Engineering"),
-            ("Institute", "JSPM Rajarshi Shahu College of Engineering, Pune"),
-            ("Academic Year", "2026–27")
+            ("Institute", "JSPM's Rajarshi Shahu College of Engineering, Pune")
+           
         ]
         
         for i, (k, v) in enumerate(info_items):
@@ -327,10 +328,10 @@ class AboutDialog(QDialog):
             btn.clicked.connect(lambda _, u=url: QDesktopServices.openUrl(QUrl(u)))
             return btn
             
-        links_layout.addWidget(create_link_btn("GitHub", "https://github.com/"))
-        links_layout.addWidget(create_link_btn("LinkedIn", "https://linkedin.com/"))
-        links_layout.addWidget(create_link_btn("Portfolio", "https://example.com/"))
-        links_layout.addWidget(create_link_btn("Email", "mailto:example@example.com"))
+        links_layout.addWidget(create_link_btn("GitHub", "https://github.com/vipulmesh"))
+        links_layout.addWidget(create_link_btn("LinkedIn", "https://www.linkedin.com/in/vipul-meshram-83645732a/"))
+        links_layout.addWidget(create_link_btn("Portfolio", "https://vipulmeshram.vercel.app/"))
+        links_layout.addWidget(create_link_btn("Email", "mailto:vipulmeshramv20@gmail.com"))
         
         close_btn = QPushButton("Close")
         close_btn.setObjectName("closeBtn")
@@ -359,8 +360,126 @@ class MainWindow(QMainWindow):
     def __init__(self) -> None:
         super().__init__()
 
-        self.setWindowTitle("4-Bar Kinematic Chain Simulator")
+        self.setWindowTitle("4-Bar Kinematic Chain Simulator by VIPUL")
         self.resize(1400, 800)
+
+        # Apply Professional Engineering Theme Stylesheet
+        self.setStyleSheet("""
+            QMainWindow {
+                background-color: #181825;
+                color: #cdd6f4;
+                font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Arial, sans-serif;
+            }
+            QGroupBox {
+                background-color: #1e1e2e;
+                border: 1px solid #313244;
+                border-radius: 8px;
+                margin-top: 18px;
+                font-size: 14px;
+                font-weight: bold;
+                color: #89b4fa;
+            }
+            QGroupBox::title {
+                subcontrol-origin: margin;
+                subcontrol-position: top left;
+                padding: 0 5px;
+                left: 10px;
+                top: 2px;
+            }
+            QLabel {
+                color: #cdd6f4;
+                font-size: 13px;
+                font-weight: normal;
+            }
+            QDoubleSpinBox, QSpinBox, QComboBox, QLineEdit {
+                background-color: #313244;
+                color: #cdd6f4;
+                border: 1px solid #45475a;
+                border-radius: 4px;
+                padding: 5px 8px;
+                font-size: 13px;
+                min-height: 24px;
+                selection-background-color: #89b4fa;
+            }
+            QDoubleSpinBox:focus, QSpinBox:focus, QComboBox:focus, QLineEdit:focus {
+                border: 1px solid #89b4fa;
+                background-color: #313244;
+            }
+            QDoubleSpinBox:disabled, QLineEdit:disabled, QComboBox:disabled {
+                background-color: #181825;
+                color: #a6adc8;
+                border: 1px solid #313244;
+            }
+            QPushButton {
+                background-color: #313244;
+                color: #cdd6f4;
+                border: 1px solid #45475a;
+                border-radius: 6px;
+                padding: 8px 16px;
+                font-size: 13px;
+                font-weight: bold;
+                min-height: 24px;
+            }
+            QPushButton:hover {
+                background-color: #45475a;
+                border: 1px solid #89b4fa;
+            }
+            QPushButton:pressed {
+                background-color: #585b70;
+            }
+            QPushButton:disabled {
+                background-color: #1e1e2e;
+                color: #585b70;
+                border: 1px solid #313244;
+            }
+            QPushButton#primaryBtn {
+                background-color: #89b4fa;
+                color: #11111b;
+                border: 1px solid #89b4fa;
+            }
+            QPushButton#primaryBtn:hover {
+                background-color: #b4befe;
+                border: 1px solid #b4befe;
+            }
+            QPushButton#primaryBtn:pressed {
+                background-color: #74c7ec;
+                border: 1px solid #74c7ec;
+            }
+            QTextEdit {
+                background-color: #11111b;
+                color: #a6adc8;
+                border: 1px solid #313244;
+                border-radius: 6px;
+                font-family: 'Consolas', 'Courier New', monospace;
+                font-size: 13px;
+                padding: 8px;
+            }
+            QStatusBar {
+                background-color: #11111b;
+                color: #cdd6f4;
+                font-weight: bold;
+                font-size: 13px;
+            }
+            QRadioButton {
+                color: #cdd6f4;
+                font-size: 13px;
+                spacing: 8px;
+            }
+            QRadioButton::indicator {
+                width: 16px;
+                height: 16px;
+                border-radius: 8px;
+                border: 1px solid #45475a;
+                background-color: #313244;
+            }
+            QRadioButton::indicator:checked {
+                background-color: #89b4fa;
+                border: 3px solid #1e1e2e;
+            }
+            QRadioButton::indicator:hover {
+                border: 1px solid #89b4fa;
+            }
+        """)
 
         # Simulation state
         self.initial_angle_deg = 0.0
@@ -489,6 +608,7 @@ class MainWindow(QMainWindow):
         # Buttons
         self.validate_btn = QPushButton("Validate")
         self.start_btn = QPushButton("Start")
+        self.start_btn.setObjectName("primaryBtn")
         self.pause_btn = QPushButton("Pause")
         self.reset_btn = QPushButton("Reset")
 
