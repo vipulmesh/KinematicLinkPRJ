@@ -1,0 +1,50 @@
+# Windows PE Version Information Resource
+#
+# This file is consumed by PyInstaller to embed a VERSIONINFO block
+# directly into the PE header of FourBarSimulator.exe.
+#
+# A complete version-info block:
+#   - Is required for Authenticode code-signing to display a meaningful
+#     publisher name in Windows security dialogs.
+#   - Reduces SmartScreen "Unknown Publisher" risk.
+#   - Allows Windows Explorer, Task Manager, and AV software to identify
+#     the application by name, company, and version.
+#
+# Format follows the PyInstaller VSVersionInfo API.
+# See: https://pyinstaller.org/en/stable/spec-files.html#spec-file-options-for-a-windows-exe
+
+VSVersionInfo(
+  ffi=FixedFileInfo(
+    # filevers and prodvers are 4-tuples: (major, minor, patch, build)
+    filevers=(2, 0, 0, 0),
+    prodvers=(2, 0, 0, 0),
+    mask=0x3f,
+    flags=0x0,
+    OS=0x40004,       # VOS_NT_WINDOWS32
+    fileType=0x1,     # VFT_APP
+    subtype=0x0,
+    date=(0, 0),
+  ),
+  kids=[
+    StringFileInfo(
+      [
+        StringTable(
+          # Language: English (US) / Code page: Unicode UTF-16
+          '040904B0',
+          [
+            StringStruct('CompanyName',      'Vipul'),
+            StringStruct('FileDescription',  'Four-Bar Kinematic Chain Simulator'),
+            StringStruct('FileVersion',      '2.0.0.0'),
+            StringStruct('InternalName',     'FourBarSimulator'),
+            StringStruct('LegalCopyright',   'Copyright (c) 2026 Vipul. All rights reserved.'),
+            StringStruct('OriginalFilename', 'FourBarSimulator.exe'),
+            StringStruct('ProductName',      'Four-Bar Kinematic Chain Simulator'),
+            StringStruct('ProductVersion',   '2.0.0.0'),
+            StringStruct('Comments',         'A planar four-bar linkage kinematic analysis and simulation tool.'),
+          ]
+        )
+      ]
+    ),
+    VarFileInfo([VarStruct('Translation', [0x0409, 1200])])
+  ]
+)

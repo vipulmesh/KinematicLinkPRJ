@@ -85,7 +85,7 @@ class SplashScreen(QFrame):
         title.setStyleSheet("color: #89b4fa;")
         
         # Version
-        version = QLabel("Version 1.0")
+        version = QLabel("Version 2.0")
         version.setAlignment(Qt.AlignCenter)
         version_font = QFont("Segoe UI", 12)
         version.setFont(version_font)
@@ -111,7 +111,7 @@ def main():
     if os.name == 'nt':
         import ctypes
         try:
-            myappid = 'vipul.fourbar.simulator.1.0'
+            myappid = 'vipul.fourbar.simulator.2.0'
             ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
         except Exception:
             pass

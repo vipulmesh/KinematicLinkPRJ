@@ -28,6 +28,16 @@ build/
 dist/
 *.spec
 
+# Un-ignore project-specific build configuration files that SHOULD be
+# tracked in version control (overrides the *.spec rule above)
+!FourBarSimulator.spec
+!version_info.txt
+!build.bat
+!WINDOWS_PACKAGING.md
+
+# Distribution ZIP is a build output — do not commit
+FourBarSimulator_v2.0_Windows.zip
+
 # ==============================
 # Python packaging
 # ==============================

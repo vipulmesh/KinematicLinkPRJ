@@ -126,7 +126,7 @@ class AboutDialog(QDialog):
         title_font.setLetterSpacing(QFont.AbsoluteSpacing, 2.0)
         title_lbl.setFont(title_font)
         
-        version_lbl = QLabel("Version 1.0")
+        version_lbl = QLabel("Version 2.0")
         version_lbl.setAlignment(Qt.AlignCenter)
         version_font = QFont()
         version_font.setPointSize(14)
